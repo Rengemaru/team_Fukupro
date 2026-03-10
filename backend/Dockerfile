@@ -14,7 +14,7 @@ RUN gem install rails -v '~> 8.1' --no-document
 WORKDIR /app
 
 COPY entrypoint.sh /usr/bin/entrypoint.sh
-RUN chmod +x /usr/bin/entrypoint.sh
+RUN sed -i 's/\r//' /usr/bin/entrypoint.sh && chmod +x /usr/bin/entrypoint.sh
 
 ENTRYPOINT ["entrypoint.sh"]
 EXPOSE 3000
