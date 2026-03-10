@@ -1,17 +1,21 @@
+# Dependencies
+frontend/node_modules/
+backend/vendor/bundle/
+
+# Build output
+frontend/dist/
+
+# Rails
+backend/tmp/
+backend/log/
+backend/*.env
+backend/.env*
+backend/config/master.key
+backend/config/credentials/*.key
+
+# Docker
+.env
+
 # OS
 .DS_Store
 Thumbs.db
-
-# Editor
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Environment variables
-.env
-.env.*
-!.env.example
-
-# Docker override
-docker-compose.override.yml
