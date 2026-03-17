@@ -1,3 +1,5 @@
+import { PhaserGame } from './components/PhaserGame';
+import './App.css';
 import { useState, useRef } from 'react'
 import Meyda from 'meyda'
 import type { MeydaAnalyzer } from 'meyda/dist/node/esm/meyda-wa'
@@ -17,6 +19,11 @@ type FeatureFrame = {
 }
 
 function App() {
+  return (
+    <div className="app-wrapper">
+      <PhaserGame />
+    </div>
+  );
   const [micStatus, setMicStatus] = useState<MicStatus>('idle')
   const streamRef = useRef<MediaStream | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -128,4 +135,4 @@ function App() {
   )
 }
 
-export default App
+export default App;
