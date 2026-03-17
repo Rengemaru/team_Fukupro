@@ -1,82 +1,77 @@
 import Phaser from 'phaser';
-
-interface MapNode {
-  id: number;
-  x: number;
-  y: number;
-  type: 'start' | 'enemy' | 'villager' | 'goal';
-  connections: number[];
-  completed: boolean;
-}
-
-// Fixed node positions and connection graph (13 nodes, multi-path)
-const NODE_DEFS: { id: number; x: number; y: number; connections: number[] }[] = [
-  // Row 1 – スタート
-  { id:  0, x: 400, y: 530, connections: [1, 2, 3] },
-  // Row 2 – 3択
-  { id:  1, x: 175, y: 425, connections: [4, 5] },
-  { id:  2, x: 400, y: 425, connections: [4, 5, 6] },
-  { id:  3, x: 625, y: 425, connections: [5, 6, 7] },
-  // Row 3 – 4択
-  { id:  4, x: 100, y: 315, connections: [8, 9] },
-  { id:  5, x: 280, y: 310, connections: [8, 9, 10] },
-  { id:  6, x: 520, y: 310, connections: [9, 10, 11] },
-  { id:  7, x: 700, y: 315, connections: [10, 11] },
-  // Row 4 – 4択
-  { id:  8, x: 150, y: 200, connections: [12] },
-  { id:  9, x: 320, y: 195, connections: [12] },
-  { id: 10, x: 480, y: 195, connections: [12] },
-  { id: 11, x: 650, y: 200, connections: [12] },
-  // Row 5 – ゴール
-  { id: 12, x: 400, y:  80, connections: [] },
-];
-
-function generateMap(): MapNode[] {
-  return NODE_DEFS.map(def => {
-    let type: MapNode['type'];
-    if (def.id === 0) {
-      type = 'start';
-    } else if (def.id === 12) {
-      type = 'goal';
-    } else {
-      type = Math.random() < 0.6 ? 'enemy' : 'villager';
-    }
-    return { ...def, type, completed: false };
-  });
-}
+import { useGameStore } from '../store/gameStore';
+import type { MapNode } from '../store/gameStore';
 
 export class MapScene extends Phaser.Scene {
   constructor() { super({ key: 'MapScene' }); }
 
   // ─── シーン構築 ────────────────────────────────────────────
   create() {
-    const W = this.scale.width;   // 800
-    const H = this.scale.height;  // 600
+    const W = this.scale.width;
+    const H = this.scale.height;
 
-    // ── マップデータをレジストリから読み込む（なければ生成） ──
-    let nodes: MapNode[] = this.game.registry.get('mapNodes');
-    if (!nodes || nodes.length === 0) {
-      nodes = generateMap();
-      this.game.registry.set('mapNodes', nodes);
+    const loading = this.add.text(W / 2, H / 2, '読み込み中...', {
+      fontSize: '20px',
+      fontFamily: '"Yu Gothic","YuGothic",monospace',
+      color: '#aabbcc',
+    }).setOrigin(0.5);
+
+    this.loadSession()
+      .then(({ nodes, player_node_id, completed_nodes }) => {
+        loading.destroy();
+        this.initScene(nodes, player_node_id, completed_nodes);
+      })
+      .catch(() => {
+        loading.setText('読み込みに失敗しました');
+      });
+  }
+
+  // ─── セッション取得（既存復元 or 新規作成） ───────────────
+  private async loadSession(): Promise<{
+    nodes: MapNode[];
+    player_node_id: number;
+    completed_nodes: number[];
+  }> {
+    const token = localStorage.getItem('session_token');
+
+    if (token) {
+      const res = await fetch(`/api/sessions/${token}`);
+      if (res.ok) {
+        const data = await res.json();
+        this.syncStore(data);
+        return data;
+      }
     }
 
-    // 完了ノードをレジストリから反映
-    const completedNodes: number[] = this.game.registry.get('completedNodes') ?? [];
-    nodes.forEach(n => { n.completed = completedNodes.includes(n.id); });
+    // 新規セッション作成
+    const res = await fetch('/api/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const data = await res.json();
+    localStorage.setItem('session_token', data.session_token);
+    this.syncStore(data);
+    return data;
+  }
 
-    // プレイヤー位置
-    const playerNodeId: number = this.game.registry.get('playerNodeId') ?? 0;
+  private syncStore(data: { nodes: MapNode[]; player_node_id: number; completed_nodes: number[] }) {
+    const store = useGameStore.getState();
+    store.setNodes(data.nodes);
+    store.setPlayerNodeId(data.player_node_id);
+    store.setCompletedNodes(data.completed_nodes);
+  }
 
-    // ── 背景 ─────────────────────────────────────────────────
+  // ─── 実描画 ───────────────────────────────────────────────
+  private initScene(nodes: MapNode[], playerNodeId: number, completedIds: number[]) {
+    const W = this.scale.width;
+    const H = this.scale.height;
+
+    // completed 状態を反映
+    nodes.forEach(n => { n.completed = completedIds.includes(n.id); });
+
     this.drawBackground(W, H);
-
-    // ── エッジ（接続線） ──────────────────────────────────────
     this.drawEdges(nodes);
-
-    // ── ノード ────────────────────────────────────────────────
     this.drawNodes(nodes, playerNodeId);
-
-    // ── UI ───────────────────────────────────────────────────
     this.addTitle(W);
     this.addInfoText(W, H, playerNodeId, nodes);
     this.addBackButton(W);
@@ -93,15 +88,34 @@ export class MapScene extends Phaser.Scene {
     const overlay = this.add.graphics();
     overlay.fillStyle(0x080412, 0.55);
     overlay.fillRect(0, 0, W, H);
+    const bg = this.add.graphics();
+    bg.fillGradientStyle(0x120820, 0x120820, 0x0a1030, 0x0a1030, 1);
+    bg.fillRect(0, 0, W, H);
+
+    for (let i = 0; i < 90; i++) {
+      const x = Phaser.Math.Between(0, W);
+      const y = Phaser.Math.Between(0, H);
+      const r = Phaser.Math.FloatBetween(0.5, 1.8);
+      const a = Phaser.Math.FloatBetween(0.3, 1.0);
+      const star = this.add.circle(x, y, r, 0xffffff, a);
+      this.tweens.add({
+        targets: star, alpha: 0.05,
+        duration: Phaser.Math.Between(800, 3000),
+        yoyo: true, repeat: -1,
+        delay: Phaser.Math.Between(0, 2500),
+      });
+    }
   }
 
   // ─── エッジ描画 ──────────────────────────────────────────
   private drawEdges(nodes: MapNode[]) {
+    const nodeMap = new Map(nodes.map(n => [n.id, n]));
     const g = this.add.graphics();
     g.lineStyle(2, 0x666677, 0.7);
     nodes.forEach(node => {
       node.connections.forEach(targetId => {
-        const target = nodes[targetId];
+        const target = nodeMap.get(targetId);
+        if (!target) return;
         g.beginPath();
         g.moveTo(node.x, node.y);
         g.lineTo(target.x, target.y);
@@ -114,10 +128,12 @@ export class MapScene extends Phaser.Scene {
   private drawNodes(nodes: MapNode[], playerNodeId: number) {
     const RADIUS = 22;
 
-    // 到達可能ノードを算出（現在地から接続されていて未完了）
-    const currentNode = nodes[playerNodeId];
+    const currentNode = nodes.find(n => n.id === playerNodeId)!;
     const reachableIds = new Set(
-      currentNode.connections.filter(id => !nodes[id].completed)
+      currentNode.connections.filter(id => {
+        const n = nodes.find(n => n.id === id);
+        return n && !n.completed;
+      })
     );
 
     nodes.forEach(node => {
@@ -125,7 +141,6 @@ export class MapScene extends Phaser.Scene {
       const isReachable = reachableIds.has(node.id);
       const isCompleted = node.completed;
 
-      // ─ プレイヤー位置のグロー ─
       if (isPlayer) {
         const glow = this.add.circle(node.x, node.y, RADIUS + 10, 0xffff44, 0.25);
         this.tweens.add({
@@ -135,7 +150,6 @@ export class MapScene extends Phaser.Scene {
         this.add.circle(node.x, node.y, RADIUS + 5, 0xffff44, 0.55);
       }
 
-      // ─ ノード円の色 ─
       let fillColor: number;
       if (isCompleted) {
         fillColor = 0x444455;
@@ -149,21 +163,18 @@ export class MapScene extends Phaser.Scene {
         fillColor = 0x22aa44;
       }
 
-      // 外枠（到達可能 → 明るい、それ以外 → 暗め）
       const borderColor = isReachable ? 0xffffff : (isPlayer ? 0xffff44 : 0x444466);
       const borderAlpha = isReachable ? 1.0 : (isPlayer ? 1.0 : 0.4);
       const circle = this.add.circle(node.x, node.y, RADIUS, fillColor,
         isCompleted || (!isReachable && !isPlayer) ? 0.45 : 1.0);
       circle.setStrokeStyle(isReachable ? 3 : 2, borderColor, borderAlpha);
 
-      // ─ ゴールノードに特別なグロー ─
       if (node.type === 'goal' && !isCompleted) {
         const goalGlow = this.add.circle(node.x, node.y, RADIUS + 14, 0xcc44ff, 0.20);
         this.tweens.add({ targets: goalGlow, alpha: 0.05, scaleX: 1.4, scaleY: 1.4, duration: 1100, yoyo: true, repeat: -1 });
         this.add.circle(node.x, node.y, RADIUS + 7, 0xee88ff, 0.40);
       }
 
-      // ─ アイコン / テキスト ─
       let iconText = '';
       if (isCompleted) {
         iconText = '✓';
@@ -186,7 +197,6 @@ export class MapScene extends Phaser.Scene {
       }).setOrigin(0.5, 0.5)
         .setAlpha(isCompleted || (!isReachable && !isPlayer) ? 0.5 : 1.0);
 
-      // ─ インタラクション（到達可能ノードのみ） ─
       if (isReachable) {
         const hitArea = this.add.circle(node.x, node.y, RADIUS + 6, 0x000000, 0)
           .setInteractive({ useHandCursor: true });
@@ -199,25 +209,42 @@ export class MapScene extends Phaser.Scene {
           circle.setStrokeStyle(3, 0xffffff, 1.0);
           circle.setFillStyle(fillColor, 1.0);
         });
-        hitArea.on('pointerdown', () => this.onNodeClick(node));
+        hitArea.on('pointerdown', async () => {
+          await this.onNodeClick(node);
+        });
       }
     });
   }
 
   // ─── ノードクリック処理 ──────────────────────────────────
-  private onNodeClick(node: MapNode) {
-    this.game.registry.set('currentNodeId', node.id);
+  private async onNodeClick(node: MapNode) {
+    const token = localStorage.getItem('session_token');
+    const store = useGameStore.getState();
+    const completedNodes = [...store.completedNodes, node.id];
+
+    await fetch(`/api/sessions/${token}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        player_node_id: node.id,
+        completed_nodes: completedNodes,
+      }),
+    });
+
+    store.setCompletedNodes(completedNodes);
+    store.setPlayerNodeId(node.id);
 
     this.cameras.main.fade(500, 0, 0, 0);
 
     if (node.type === 'goal') {
+      localStorage.removeItem('session_token');
+      store.reset();
       this.time.delayedCall(500, () => this.scene.start('ClearScene'));
     } else if (node.type === 'enemy') {
       this.time.delayedCall(500, () => {
         this.scene.start('GameScene', { nodeId: node.id });
       });
     } else {
-      // villager
       const villagerType = node.id % 2 === 0 ? 'man' : 'woman';
       this.time.delayedCall(500, () => {
         this.scene.start('VillagerScene', { nodeId: node.id, villagerType });
@@ -235,7 +262,6 @@ export class MapScene extends Phaser.Scene {
       strokeThickness: 4,
     }).setOrigin(0.5, 0.5);
 
-    // 凡例
     const legendItems = [
       { color: 0xddaa22, label: '★ スタート' },
       { color: 0xcc2222, label: '⚔ 敵' },
@@ -253,7 +279,7 @@ export class MapScene extends Phaser.Scene {
 
   // ─── 下部インフォテキスト ──────────────────────────────
   private addInfoText(W: number, H: number, playerNodeId: number, nodes: MapNode[]) {
-    const current = nodes[playerNodeId];
+    const current = nodes.find(n => n.id === playerNodeId)!;
     const typeName = current.type === 'start'   ? 'スタート地点' :
                      current.type === 'goal'    ? '👑 ゴール'    :
                      current.type === 'enemy'   ? '敵エリア'     : '村人エリア';
