@@ -7,3 +7,19 @@
 #   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
+
+Enemy.find_or_create_by(name: 'スライム').update(
+  weakness_weather: 'thunderstorm',
+  max_hp:           30,
+  attack_power:     8
+)
+Enemy.find_or_create_by(name: 'ゴーレム').update(
+  weakness_weather: 'rain',
+  max_hp:           60,
+  attack_power:     15
+)
+Enemy.find_or_create_by(name: 'ドラゴン').update(
+  weakness_weather: 'wind',
+  max_hp:           100,
+  attack_power:     25
+)
