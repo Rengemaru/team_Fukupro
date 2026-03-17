@@ -12,6 +12,15 @@ const IDLE_KEYS = ['gale_idle','gale_idle1','gale_idle2','gale_idle3'] as const;
 //   wind    → Ice Swirl Attack A (gale_atk_wind.png)
 type WeatherType = 'thunder' | 'fire' | 'water' | 'wind' | 'hail';
 
+// API の天候 → GameScene の WeatherType マッピング
+const API_WEATHER_MAP: Record<string, WeatherType> = {
+  thunderstorm: 'thunder',
+  rain:         'water',
+  wind:         'wind',
+  sunny:        'fire',
+  hail:         'hail',
+};
+
 // 雹の3フレームキー
 const HAIL_KEYS = ['gale_atk_hyou', 'gale_atk_hyou1', 'gale_atk_hyou2'] as const;
 
@@ -51,8 +60,14 @@ export class GameScene extends Phaser.Scene {
   private hailDisplayW = 0;
   private hailDisplayH = 0;
   private currentNodeId = -1;
+  private activeWeatherType: WeatherType | null = null;
+  private weatherBtnRedraw: Partial<Record<WeatherType, (hover: boolean) => void>> = {};
 
   constructor() { super({ key: 'GameScene' }); }
+
+  shutdown() {
+    this.game.events.off('weatherChanged', undefined, this);
+  }
 
   // ─── アセット読み込み ──────────────────────────────────────
   preload() {
@@ -87,6 +102,15 @@ export class GameScene extends Phaser.Scene {
     this.createBackButton(W);
 
     this.cameras.main.fadeIn(600);
+
+    // Zustand の天候変化を受け取り、空・エフェクトに反映する
+    this.game.events.on('weatherChanged', (apiWeather: string) => {
+      const type = API_WEATHER_MAP[apiWeather];
+      if (type) {
+        this.highlightWeatherBtn(type);
+        this.attackWithWeather(type);
+      }
+    }, this);
   }
 
   // ─── 背景（2.5D奥行き感） ──────────────────────────────────
@@ -329,13 +353,19 @@ export class GameScene extends Phaser.Scene {
 
       const frame = this.add.graphics();
       const drawFrame = (hover: boolean) => {
+        const isActive = this.activeWeatherType === type;
         frame.clear();
-        frame.fillStyle(cfg.btnColor, hover ? 1 : 0.9);
+        frame.fillStyle(cfg.btnColor, hover || isActive ? 1 : 0.9);
         frame.fillRoundedRect(bx, by, btnW, btnH, 6);
-        frame.lineStyle(hover ? 3 : 2, hover ? 0xffffff : cfg.btnGlow, hover ? 1 : 0.85);
+        frame.lineStyle(
+          isActive ? 4 : hover ? 3 : 2,
+          isActive ? 0xffffff : hover ? 0xffffff : cfg.btnGlow,
+          isActive ? 1 : hover ? 1 : 0.85
+        );
         frame.strokeRoundedRect(bx, by, btnW, btnH, 6);
       };
       drawFrame(false);
+      this.weatherBtnRedraw[type] = drawFrame;
 
       // アイコン（左上）& ラベル（中央）
       this.add.text(bx + 8, by + 6, cfg.emoji, { fontSize:'18px' }).setDepth(1);
@@ -686,6 +716,14 @@ export class GameScene extends Phaser.Scene {
       reg.set('playerNodeId', this.currentNodeId);
       this.cameras.main.fade(500, 0, 0, 0);
       this.time.delayedCall(500, () => this.scene.start('MapScene'));
+    });
+  }
+
+  // ─── 天候ボタンハイライト ────────────────────────────────────
+  private highlightWeatherBtn(type: WeatherType) {
+    this.activeWeatherType = type;
+    (Object.keys(this.weatherBtnRedraw) as WeatherType[]).forEach(t => {
+      this.weatherBtnRedraw[t]?.(false);
     });
   }
 
