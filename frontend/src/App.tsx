@@ -1,11 +1,14 @@
-import { PhaserGame } from './components/PhaserGame';
-import './App.css';
 import { useState, useRef } from 'react'
 import Meyda from 'meyda'
 import type { MeydaAnalyzer } from 'meyda/dist/node/esm/meyda-wa'
 import type { MeydaFeaturesObject } from 'meyda/dist/node/esm/main'
 import { useWeatherStore } from './store/weatherStore'
-import './App.css'
+import "./App.css"
+import WeatherIcon from "./component/wether_icon"
+
+type WeatherType = "sunny" | "rain" | "thunder" | "wind" | "hail"
+
+const weatherOptions: WeatherType[] = ["sunny", "rain", "thunder", "wind", "hail"]
 
 const FRAME_BUFFER_SIZE = 10
 
@@ -19,11 +22,6 @@ type FeatureFrame = {
 }
 
 function App() {
-  return (
-    <div className="app-wrapper">
-      <PhaserGame />
-    </div>
-  );
   const [micStatus, setMicStatus] = useState<MicStatus>('idle')
   const streamRef = useRef<MediaStream | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -104,7 +102,31 @@ function App() {
   }
 
   return (
-    <>
+    <div style={{ width: "100vw", minHeight: "100vh", background: "#eef6ff", position: "relative" }}>
+      <div style={{ position: "fixed", top: 12, left: 12, zIndex: 10 }}>
+        <WeatherIcon weather={(weather ?? "sunny") as WeatherType} />
+      </div>
+
+      <div style={{ position: "fixed", top: 16, right: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {weatherOptions.map((w) => (
+          <button
+            key={w}
+            style={{
+              border: "1px solid #ccc",
+              borderRadius: 8,
+              padding: "8px 12px",
+              background: weather === w ? "#4f46e5" : "white",
+              color: weather === w ? "white" : "#333",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+            onClick={() => setWeather(w)}
+          >
+            {w}
+          </button>
+        ))}
+      </div>
+
       <h1>マイクアクセス</h1>
       <div className="card">
         {micStatus === 'idle' && (
@@ -131,8 +153,8 @@ function App() {
           </div>
         )}
       </div>
-    </>
+    </div>
   )
 }
 
-export default App;
+export default App
