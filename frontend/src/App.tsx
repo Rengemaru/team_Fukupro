@@ -142,7 +142,7 @@ function App() {
         {micStatus === 'denied' && (
           <div className="error-box">
             <p>マイクへのアクセスが拒否されました</p>
-            <p>ブラウザのアドレスバー横にある鍵アイコンをクリックし、マイクを「許可」に変更してからページを再読み込みしてください</p>
+            <p>ブラウザのアドレスバー横にある鍵アイコンをクリックし、マイクを「許可」に変更してからページを再読み込みしてください。</p>
             <button onClick={() => setMicStatus('idle')}>再試行</button>
           </div>
         )}
