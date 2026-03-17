@@ -4,6 +4,7 @@ import type { MeydaAnalyzer } from 'meyda/dist/node/esm/meyda-wa'
 import type { MeydaFeaturesObject } from 'meyda/dist/node/esm/main'
 import { useWeatherStore } from './store/weatherStore'
 import "./App.css"
+import './App.css'
 import WeatherIcon from "./component/wether_icon"
 
 type WeatherType = "sunny" | "rain" | "thunder" | "wind" | "hail"
@@ -152,6 +153,34 @@ function App() {
             <button onClick={() => setMicStatus('idle')}>再試行</button>
           </div>
         )}
+      </div>
+    </>
+  const [weather, setWeather] = useState<WeatherType>("sunny")
+
+  return (
+    <div style={{ width: "100vw", minHeight: "100vh", background: "#eef6ff", position: "relative" }}>
+      <div style={{ position: "fixed", top: 12, left: 12, zIndex: 10 }}>
+        <WeatherIcon weather={weather} />
+      </div>
+
+      <div style={{ position: "fixed", top: 16, right: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {weatherOptions.map((w) => (
+          <button
+            key={w}
+            style={{
+              border: "1px solid #ccc",
+              borderRadius: 8,
+              padding: "8px 12px",
+              background: weather === w ? "#4f46e5" : "white",
+              color: weather === w ? "white" : "#333",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+            onClick={() => setWeather(w)}
+          >
+            {w}
+          </button>
+        ))}
       </div>
     </div>
   )
