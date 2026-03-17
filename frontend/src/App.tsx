@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import Meyda from 'meyda'
 import type { MeydaAnalyzer } from 'meyda/dist/node/esm/meyda-wa'
 import type { MeydaFeaturesObject } from 'meyda/dist/node/esm/main'
+import { useWeatherStore } from './store/weatherStore'
 import './App.css'
 
 const FRAME_BUFFER_SIZE = 10
@@ -15,14 +16,6 @@ type FeatureFrame = {
   zcr: number | null
   spectralCentroid: number | null
   spectralRolloff: number | null
-}
-
-async function sendFeatures(frames: FeatureFrame[]) {
-  await fetch('/api/audio-features', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ frames }),
-  })
 }
 
 function App() {
@@ -37,6 +30,19 @@ function App() {
   const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null)
   const meydaAnalyzerRef = useRef<MeydaAnalyzer | null>(null)
   const frameBufferRef = useRef<FeatureFrame[]>([])
+  const { weather, setWeather } = useWeatherStore()
+
+  const sendToWeatherApi = async (frames: FeatureFrame[]) => {
+    const res = await fetch('/api/weather', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ frames, weather }),
+    })
+    const data = await res.json()
+    if (data.weather) {
+      setWeather(data.weather)
+    }
+  }
 
   const requestMic = async () => {
     try {
@@ -64,7 +70,7 @@ function App() {
           frameBufferRef.current.push(frame)
 
           if (frameBufferRef.current.length >= FRAME_BUFFER_SIZE) {
-            sendFeatures(frameBufferRef.current)
+            sendToWeatherApi(frameBufferRef.current)
             frameBufferRef.current = []
           }
         },
