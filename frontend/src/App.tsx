@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import Meyda from 'meyda'
-import type { MeydaAnalyzer, MeydaFeaturesObject } from 'meyda'
+import type { MeydaAnalyzer } from 'meyda/dist/node/esm/meyda-wa'
+import type { MeydaFeaturesObject } from 'meyda/dist/node/esm/main'
 import './App.css'
 
 type MicStatus = 'idle' | 'active' | 'denied' | 'error'
