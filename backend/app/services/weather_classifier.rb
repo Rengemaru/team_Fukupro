@@ -16,21 +16,21 @@ class WeatherClassifier
   # 天候種別: sunny / rain / wind / thunderstorm / hail
   # @return [String] 天候種別
   def classify
-    return "sunny" if @frames.empty?
+    return Constants::Weather::SUNNY if @frames.empty?
 
     avg = average_features
 
     case
     when avg[:rms] > RMS_HIGH && avg[:zcr] > ZCR_HIGH && avg[:spectral_centroid] > SPECTRAL_CENTROID_HIGH
-      "hail"          # 雹: 非常に激しい・高音域・高ZCR
+      Constants::Weather::HAIL          # 雹: 非常に激しい・高音域・高ZCR
     when avg[:rms] > RMS_HIGH && avg[:spectral_centroid] > SPECTRAL_CENTROID_HIGH
-      "thunderstorm"  # 雷: 激しい・高音域
+      Constants::Weather::THUNDERSTORM  # 雷: 激しい・高音域
     when avg[:rms] > RMS_MID && avg[:zcr] > ZCR_HIGH
-      "wind"          # 強風: 中程度・高ZCR（風のざわめき）
+      Constants::Weather::WIND          # 強風: 中程度・高ZCR（風のざわめき）
     when avg[:rms] > RMS_LOW
-      "rain"          # 雨: 弱〜中程度の音
+      Constants::Weather::RAIN          # 雨: 弱〜中程度の音
     else
-      "sunny"         # 晴: ほぼ無音
+      Constants::Weather::SUNNY         # 晴: ほぼ無音
     end
   end
 
