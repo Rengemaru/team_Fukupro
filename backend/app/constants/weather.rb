@@ -6,6 +6,6 @@ module Constants
     THUNDERSTORM = "thunderstorm"
     HAIL         = "hail"
 
-    ALL = [SUNNY, RAIN, WIND, THUNDERSTORM, HAIL].freeze
+    ALL = [ SUNNY, RAIN, WIND, THUNDERSTORM, HAIL ].freeze
   end
 end
