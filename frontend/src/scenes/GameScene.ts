@@ -369,7 +369,10 @@ export class GameScene extends Phaser.Scene {
           }
 
           // 敵HPをAPIの値で更新
-          this.onProjectileHit(res.player_attack.damage, cfg.projColor, res.enemy_current_hp);
+          const displayDmg = res.player_attack.result === 'weakness' ? 10
+                           : res.player_attack.result === 'hit'      ? 5
+                           : 0;
+          this.onProjectileHit(displayDmg, cfg.projColor, res.enemy_current_hp);
           // プレイヤーHPをAPIの値で更新
           usePlayerStore.getState().setHp(res.player_current_hp);
           // ストアのノードHPも更新
