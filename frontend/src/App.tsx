@@ -11,7 +11,7 @@ function App() {
   const [canvasRect, setCanvasRect] = useState<{ left: number; bottom: number } | null>(null)
 
   useEffect(() => {
-    if (!mikeVisible) { setCanvasRect(null); return }
+    if (!mikeVisible) return
 
     const update = () => {
       const canvas = wrapperRef.current?.querySelector('canvas')
