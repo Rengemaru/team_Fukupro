@@ -2,7 +2,6 @@ import Phaser from 'phaser';
 import { usePlayerStore } from '../store/playerStore';
 import { useGameStore } from '../store/gameStore';
 import { apiClient } from '../api/apiClient';
-import { postVillage } from '../api/villageApi';
 
 type WeatherChoice = 'thunder' | 'sunny' | 'rain' | 'wind' | 'hail';
 type VillagerType = 'man' | 'woman' | 'beast_attack' | 'sailing_ship' | 'drought' | 'heavy_rain';
@@ -372,10 +371,6 @@ export class VillagerScene extends Phaser.Scene {
         resultText.setText(msg).setY(H*0.555).setVisible(true);
         this.tweens.add({ targets:resultText, alpha:0.4, duration:450, yoyo:true, repeat:1 });
 
-        // APIコールをアニメーションと並行して開始
-        const token = localStorage.getItem('session_token') ?? '';
-        const apiPromise = postVillage({ session_token: token, node_id: nodeId, weather: type });
-
         const delay = isCorrect ? 2000 : 2400;
         this.time.delayedCall(delay, async () => {
           const token = localStorage.getItem('session_token') ?? '';
@@ -384,14 +379,6 @@ export class VillagerScene extends Phaser.Scene {
             usePlayerStore.getState().setHp(res.player_current_hp);
           } catch (e) {
             console.error('[VillagerScene] postVillage failed', e);
-          try {
-            const res = await apiPromise;
-            usePlayerStore.getState().setHp(res.player_current_hp);
-            if (res.outcome !== 'neutral') {
-              const gameStore = useGameStore.getState();
-              gameStore.setCompletedNodes([...gameStore.completedNodes, nodeId]);
-            }
-          } catch {
             if (isPenalty) usePlayerStore.getState().dealDamage();
           }
           this.cameras.main.fade(500, 0, 0, 0);
@@ -570,20 +557,7 @@ export class VillagerScene extends Phaser.Scene {
             usePlayerStore.getState().setHp(res.player_current_hp);
           } catch (e) {
             console.error('[VillagerScene] postVillage failed', e);
-        // APIコールをアニメーションと並行して開始
-        const token = localStorage.getItem('session_token') ?? '';
-        const apiPromise = postVillage({ session_token: token, node_id: nodeId, weather: type });
-
-        this.time.delayedCall(1700, async () => {
-          try {
-            const res = await apiPromise;
-            usePlayerStore.getState().setHp(res.player_current_hp);
-            if (res.outcome !== 'neutral') {
-              const gameStore = useGameStore.getState();
-              gameStore.setCompletedNodes([...gameStore.completedNodes, nodeId]);
-            }
-          } catch {
-            // フォールバック: 通常イベントはペナルティなし
+            // 通常イベントはペナルティなし（HPは変化しない）
           }
           this.cameras.main.fade(500, 0, 0, 0);
           this.time.delayedCall(500, () => this.scene.start('MapScene'));
