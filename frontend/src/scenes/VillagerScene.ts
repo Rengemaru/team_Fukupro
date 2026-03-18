@@ -96,9 +96,10 @@ const SPECIAL_EVENTS: Record<'beast_attack' | 'sailing_ship' | 'drought' | 'heav
 const ALL_WALK_KEYS = [
   'gale_walk','gale_walk1','gale_walk2','gale_walk3','gale_walk4','gale_walk5'
 ] as const;
+// 全て透過PNG版を使用（黒背景除去済み）
 const WALK_FILE: Record<string, string> = {
-  gale_walk4: 'gale_walk4.jpg.png',
-  gale_walk5: 'gale_walk5.png',
+  gale_walk4: 'gale_walk4.jpg.png',  // PNG (既存)
+  gale_walk5: 'gale_walk5.png',      // PNG (既存)
 };
 
 const VILLAGER_WEATHER_MAP: Record<string, WeatherChoice> = {
