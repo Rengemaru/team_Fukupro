@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { usePlayerStore } from '../store/playerStore';
+import { type EnemyType, ENEMY_TYPES, ENEMY_CONFIG } from '../constants/enemies';
 
 const SPRITE_SCALE     = 1.7;
 const ATK_SPRITE_SCALE = 2.0;
@@ -31,25 +32,6 @@ const WEATHER_CONFIG: Record<WeatherType, {
 };
 
 // ─── 敵の種類 ─────────────────────────────────────────────
-type EnemyType = 'slime' | 'zombie' | 'sand_golem' | 'fire_fairy' | 'armored_ghost';
-
-const ENEMY_TYPES: EnemyType[] = ['slime', 'zombie', 'sand_golem', 'fire_fairy', 'armored_ghost'];
-
-const ENEMY_CONFIG: Record<EnemyType, {
-  name: string;
-  hp: number;
-  color: number;
-  // null = プロシージャル生成（スライム）、[frame1key, frame2key] = 画像使用
-  imageKeys: [string, string] | null;
-  // 画像の表示サイズ [width, height]（スライムは未使用）
-  displaySize: [number, number];
-}> = {
-  slime:         { name: 'スライム',    hp: 30, color: 0x22dd22, imageKeys: null,                             displaySize: [0,   0  ] },
-  zombie:        { name: 'ゾンビ',      hp: 40, color: 0x55aa66, imageKeys: ['zonbi1',       'zonbi2'      ], displaySize: [130, 265] },
-  sand_golem:    { name: '砂の魔人',    hp: 50, color: 0xddbb55, imageKeys: ['sunanomazin1', 'sunanomazin2'], displaySize: [175, 210] },
-  fire_fairy:    { name: '炎の妖精',    hp: 25, color: 0xff6622, imageKeys: ['yousei1',      'yousei2'     ], displaySize: [100, 100] },
-  armored_ghost: { name: '鎧のお化け', hp: 45, color: 0x7788aa, imageKeys: ['yoroi1',       'yoroi2'      ], displaySize: [145, 230] },
-};
 
 export class GameScene extends Phaser.Scene {
   private currentEnemyType: EnemyType = 'slime';
