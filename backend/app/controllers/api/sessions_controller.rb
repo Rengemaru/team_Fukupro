@@ -1,15 +1,18 @@
 module Api
   class SessionsController < ApplicationController
+    ALL_WEATHERS = %w[thunder fire water wind hail].freeze
+
     # POST /api/sessions
     def create
       nodes   = MapGenerator.call
       session = GameSession.create!(
-        session_token:  SecureRandom.uuid,
-        player_node_id: 0,
-        finished:       false,
-        expires_at:     Time.current + 24.hours,
-        map_nodes:      nodes,
-        completed_nodes: []
+        session_token:   SecureRandom.uuid,
+        player_node_id:  0,
+        finished:        false,
+        expires_at:      Time.current + 24.hours,
+        map_nodes:       nodes,
+        completed_nodes: [],
+        player_spells:   ALL_WEATHERS.sample(2)
       )
 
       render json: session_json(session, nodes), status: :created
@@ -19,6 +22,10 @@ module Api
     def show
       session = find_active_session
       return render json: { error: "not found" }, status: :not_found unless session
+
+      if session.player_spells.blank?
+        session.update!(player_spells: ALL_WEATHERS.sample(2))
+      end
 
       render json: session_json(session, session.map_nodes)
     end
@@ -57,7 +64,8 @@ module Api
         nodes:           nodes,
         player_node_id:  session.player_node_id,
         completed_nodes: session.completed_nodes,
-        finished:        session.finished
+        finished:        session.finished,
+        player_spells:   session.player_spells || []
       }
     end
   end

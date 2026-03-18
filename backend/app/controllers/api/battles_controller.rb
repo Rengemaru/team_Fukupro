@@ -28,6 +28,8 @@ module Api
 
     private
 
+    ALL_WEATHERS = %w[thunder fire water wind hail].freeze
+
     def update_session(session, node, result)
       updated_nodes = session.map_nodes.map do |n|
         next n unless n["id"] == node["id"]
@@ -38,10 +40,21 @@ module Api
         )
       end
 
+      new_spell = nil
+      if result[:battle_result] == "win"
+        current_spells = session.player_spells || []
+        remaining = ALL_WEATHERS - current_spells
+        if remaining.any?
+          new_spell = remaining.sample
+          result[:new_spell] = new_spell
+        end
+      end
+
       session.update!(
-        map_nodes:  updated_nodes,
-        player_hp:  result[:player_current_hp],
-        finished:   result[:battle_result] == "game_over"
+        map_nodes:     updated_nodes,
+        player_hp:     result[:player_current_hp],
+        finished:      result[:battle_result] == "game_over",
+        player_spells: new_spell ? ((session.player_spells || []) + [new_spell]) : session.player_spells
       )
     end
   end

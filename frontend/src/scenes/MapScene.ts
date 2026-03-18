@@ -54,11 +54,12 @@ export class MapScene extends Phaser.Scene {
     return data;
   }
 
-  private syncStore(data: { nodes: MapNode[]; player_node_id: number; completed_nodes: number[] }) {
+  private syncStore(data: { nodes: MapNode[]; player_node_id: number; completed_nodes: number[]; player_spells?: string[] }) {
     const store = useGameStore.getState();
     store.setNodes(data.nodes);
     store.setPlayerNodeId(data.player_node_id);
     store.setCompletedNodes(data.completed_nodes);
+    if (data.player_spells) store.setPlayerSpells(data.player_spells);
   }
 
   // ─── 実描画 ───────────────────────────────────────────────
