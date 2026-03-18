@@ -12,18 +12,10 @@ const IDLE_KEYS = ['gale_idle','gale_idle1','gale_idle2','gale_idle3'] as const;
 type WeatherType = 'thunder' | 'fire' | 'water' | 'wind' | 'hail';
 
 const API_WEATHER_MAP: Record<string, WeatherType> = {
-  thunderstorm: 'thunder',
-  rain:         'water',
-  wind:         'wind',
-  sunny:        'fire',
-  hail:         'hail',
-};
-
-const WEATHER_TYPE_TO_API_STR: Record<WeatherType, string> = {
-  thunder: 'thunderstorm',
-  water:   'rain',
+  thunder: 'thunder',
+  water:   'water',
   wind:    'wind',
-  fire:    'sunny',
+  fire:    'fire',
   hail:    'hail',
 };
 
@@ -349,7 +341,7 @@ export class GameScene extends Phaser.Scene {
     this.battleResultPromise = apiClient.postBattle({
       session_token: token,
       node_id: this.currentNodeId,
-      weather: WEATHER_TYPE_TO_API_STR[type],
+      weather: type,
     });
 
     this.time.delayedCall(250, () => {
