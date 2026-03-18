@@ -1,50 +1,43 @@
 class WeatherClassifier
-  # 閾値定数
-  RMS_HIGH               = 0.6
-  RMS_MID                = 0.4
-  RMS_LOW                = 0.2
-  SPECTRAL_CENTROID_HIGH = 3000.0
-  ZCR_HIGH               = 0.35
+  # 表示dB = 20*log10(rms) + 60 の逆算
+  RMS_WIND      = 10 ** (( 10 - 60) / 20.0)  #  10dB → ~0.00316
+  RMS_SUNNY     = 10 ** (( 20 - 60) / 20.0)  #  20dB → 0.01
+  RMS_RAIN      = 10 ** (( 30 - 60) / 20.0)  #  30dB → ~0.0316
+  RMS_THUNDER   = 10 ** (( 40 - 60) / 20.0)  #  40dB → 0.1
+  # 41dB以上 → 雹
 
-  # @param frames [Array<Hash>] 特徴量フレームの配列
-  #   例: [{ rms: 0.6, zcr: 0.3, spectral_centroid: 3200.0, spectral_rolloff: 4800.0 }, ...]
   def initialize(frames)
     @frames = frames
   end
 
-  # 各フレームの平均値をもとに天候を分類して返す
+  # 平均RMSをdBスケールで分類
   # 天候種別: sunny / rain / wind / thunderstorm / hail
-  # @return [String] 天候種別
   def classify
     return Constants::Weather::SUNNY if @frames.empty?
 
-    avg = average_features
+    avg_rms = average_rms
 
     case
-    when avg[:rms] > RMS_HIGH && avg[:zcr] > ZCR_HIGH && avg[:spectral_centroid] > SPECTRAL_CENTROID_HIGH
-      Constants::Weather::HAIL          # 雹: 非常に激しい・高音域・高ZCR
-    when avg[:rms] > RMS_HIGH && avg[:spectral_centroid] > SPECTRAL_CENTROID_HIGH
-      Constants::Weather::THUNDERSTORM  # 雷: 激しい・高音域
-    when avg[:rms] > RMS_MID && avg[:zcr] > ZCR_HIGH
-      Constants::Weather::WIND          # 強風: 中程度・高ZCR（風のざわめき）
-    when avg[:rms] > RMS_LOW
-      Constants::Weather::RAIN          # 雨: 弱〜中程度の音
+    when avg_rms >= RMS_THUNDER
+      Constants::Weather::HAIL          # 41dB以上 → 雹
+    when avg_rms >= RMS_RAIN
+      Constants::Weather::THUNDERSTORM  # 31〜40dB → 雷
+    when avg_rms >= RMS_SUNNY
+      Constants::Weather::RAIN          # 21〜30dB → 雨
+    when avg_rms >= RMS_WIND
+      Constants::Weather::SUNNY         # 11〜20dB → 晴れ
     else
-      Constants::Weather::SUNNY         # 晴: ほぼ無音
+      Constants::Weather::WIND          # 0〜10dB → 風
     end
+  end
+
+  def debug_avg
+    { avg_rms: average_rms, display_db: (20 * Math.log10([average_rms, 1e-10].max) + 60).round(1) }
   end
 
   private
 
-  # 全フレームの各特徴量の平均値を計算する
-  # @return [Hash] { rms:, zcr:, spectral_centroid:, spectral_rolloff: }
-  def average_features
-    count = @frames.size.to_f
-    {
-      rms:               @frames.sum { |f| f[:rms].to_f } / count,
-      zcr:               @frames.sum { |f| f[:zcr].to_f } / count,
-      spectral_centroid: @frames.sum { |f| (f[:spectral_centroid] || f[:spectralCentroid]).to_f } / count,
-      spectral_rolloff:  @frames.sum { |f| (f[:spectral_rolloff]  || f[:spectralRolloff]).to_f  } / count
-    }
+  def average_rms
+    @frames.sum { |f| f[:rms].to_f } / @frames.size.to_f
   end
 end
