@@ -51,6 +51,7 @@ export class GameScene extends Phaser.Scene {
   private playerBaseY = 0;
   private enemyFrameTimer?: Phaser.Time.TimerEvent;
 
+  private playerHpText!: Phaser.GameObjects.Text;
   private skyGfx!: Phaser.GameObjects.Graphics;
   private idleSprite!: Phaser.GameObjects.Image;
   private castImage!: Phaser.GameObjects.Image;
@@ -110,6 +111,7 @@ export class GameScene extends Phaser.Scene {
     this.createPlayer(this.playerX, this.playerBaseY);
     this.createEnemy(this.slimeX, this.slimeY);
     this.createHUD(W, H);
+    this.updatePlayerHpDisplay();
     this.createWeatherButtons(W, H);
     this.createBackButton(W);
 
@@ -265,7 +267,7 @@ export class GameScene extends Phaser.Scene {
     fi.fillStyle(0xe0e8ff); fi.fillRect(22, hudY+14, 28, 10);
     fi.lineStyle(2, 0x4488ff); fi.strokeRoundedRect(12, hudY+10, 48, 48, 4);
     this.add.text(68, hudY+12, 'Gale', { fontSize:'14px', fontFamily:'monospace', color:'#aaddff' });
-    this.add.text(68, hudY+30, '♥ ♥ ♥ ♥ ♥', { fontSize:'18px', fontFamily:'monospace', color:'#ee2222' });
+    this.playerHpText = this.add.text(68, hudY+30, '♥ ♥ ♥ ♥ ♥', { fontSize:'18px', fontFamily:'monospace', color:'#ee2222' });
     const mpBg = this.add.graphics();
     mpBg.fillStyle(0x001133); mpBg.fillRect(68, hudY+50, 120, 10);
     mpBg.fillStyle(0x2244cc); mpBg.fillRect(68, hudY+50, 90, 10);
@@ -275,6 +277,12 @@ export class GameScene extends Phaser.Scene {
       fontSize:'14px', fontFamily:'"Yu Gothic","YuGothic",monospace',
       color:'#ffffff', stroke:'#000', strokeThickness:2, align:'center',
     }).setOrigin(0.5);
+  }
+
+  private updatePlayerHpDisplay() {
+    const { hp, maxHP } = usePlayerStore.getState();
+    const hearts = Array(maxHP).fill(null).map((_, i) => i < hp ? '♥' : '♡').join(' ');
+    this.playerHpText.setText(hearts);
   }
 
   private createWeatherButtons(W: number, H: number) {
@@ -362,8 +370,6 @@ export class GameScene extends Phaser.Scene {
 
           // 敵HPをAPIの値で更新
           this.onProjectileHit(res.player_attack.damage, cfg.projColor, res.enemy_current_hp);
-          // プレイヤーHPをAPIの値で更新
-          usePlayerStore.getState().setHp(res.player_current_hp);
           // ストアのノードHPも更新
           if (this.currentNodeId >= 0) {
             useGameStore.getState().updateNodeHp(this.currentNodeId, res.enemy_current_hp);
@@ -377,7 +383,6 @@ export class GameScene extends Phaser.Scene {
           // 反撃（ongoing / game_over）
           this.time.delayedCall(400, () => {
             this.slimeCounterAttack(
-              res.enemy_attack.damage,
               res.enemy_attack.result === 'miss',
               res.player_current_hp,
               res.battle_result === 'game_over',
@@ -392,7 +397,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   // ─── スライム反撃処理 ──────────────────────────────────────
-  private slimeCounterAttack(_damage = 1, isMiss = false, playerCurrentHp?: number, isGameOver = false) {
+  private slimeCounterAttack(isMiss = false, playerCurrentHp?: number, isGameOver = false) {
     const enemyName = ENEMY_CONFIG[this.currentEnemyType].name;
 
     // スライムが左に突進するアニメ
@@ -419,12 +424,13 @@ export class GameScene extends Phaser.Scene {
       });
     }
 
-    // プレイヤーHPを更新
+    // プレイヤーHPを更新して表示に反映
     if (playerCurrentHp !== undefined) {
       usePlayerStore.getState().setHp(playerCurrentHp);
     } else {
       usePlayerStore.getState().dealDamage();
     }
+    this.updatePlayerHpDisplay();
 
     // ゲームオーバー判定
     const hpAfter = playerCurrentHp ?? usePlayerStore.getState().hp;
