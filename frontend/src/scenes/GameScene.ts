@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { usePlayerStore } from '../store/playerStore';
-import { type EnemyType, ENEMY_TYPES, ENEMY_CONFIG } from '../constants/enemies';
+import { type EnemyType, ENEMY_TYPES, ENEMY_CONFIG, ENEMY_ID_TO_TYPE } from '../constants/enemies';
+import { useGameStore } from '../store/gameStore';
 
 const SPRITE_SCALE     = 1.7;
 const ATK_SPRITE_SCALE = 2.0;
@@ -81,12 +82,14 @@ export class GameScene extends Phaser.Scene {
     this.load.on('loaderror', (f: Phaser.Loader.File) => console.warn('[GameScene] load failed:', f.key));
   }
 
-  create(data?: { nodeId?: number }) {
+  create(data?: { nodeId?: number; enemyId?: number; enemyName?: string; enemyHp?: number }) {
     this.currentNodeId = data?.nodeId ?? -1;
-    // ランダムで敵を選ぶ
-    this.currentEnemyType = ENEMY_TYPES[Phaser.Math.Between(0, ENEMY_TYPES.length - 1)];
+    // enemyId が渡された場合は対応する EnemyType を使う、なければランダム
+    this.currentEnemyType = (data?.enemyId && ENEMY_ID_TO_TYPE[data.enemyId])
+      ? ENEMY_ID_TO_TYPE[data.enemyId]
+      : ENEMY_TYPES[Phaser.Math.Between(0, ENEMY_TYPES.length - 1)];
     const enemyCfg = ENEMY_CONFIG[this.currentEnemyType];
-    this.slimeHp    = enemyCfg.hp;
+    this.slimeHp    = data?.enemyHp ?? enemyCfg.hp;
     this.slimeMaxHp = enemyCfg.hp;
     this.attackEnabled = true;
 
@@ -651,11 +654,11 @@ export class GameScene extends Phaser.Scene {
     btn.on('pointerover', () => btn.setColor('#ffffff'));
     btn.on('pointerout',  () => btn.setColor('#aaddff'));
     btn.on('pointerdown', () => {
-      const reg = this.game.registry;
-      const done: number[] = reg.get('completedNodes') ?? [];
-      if (this.currentNodeId >= 0 && !done.includes(this.currentNodeId)) done.push(this.currentNodeId);
-      reg.set('completedNodes', done);
-      reg.set('playerNodeId', this.currentNodeId);
+      const store = useGameStore.getState();
+      if (this.currentNodeId >= 0) {
+        const completedNodes = [...store.completedNodes, this.currentNodeId];
+        store.setCompletedNodes(completedNodes);
+      }
       this.cameras.main.fade(500, 0, 0, 0);
       this.time.delayedCall(500, () => this.scene.start('MapScene'));
     });

@@ -1,6 +1,15 @@
 // ─── GameScene で使う敵の表示設定 ────────────────────────────────────
 export type EnemyType = "slime" | "zombie" | "sand_golem" | "fire_fairy" | "armored_ghost";
 
+// バックエンドの enemies.id → EnemyType のマッピング
+export const ENEMY_ID_TO_TYPE: Record<number, EnemyType> = {
+  1: 'slime',
+  2: 'zombie',
+  3: 'sand_golem',
+  4: 'fire_fairy',
+  5: 'armored_ghost',
+};
+
 export const ENEMY_TYPES: EnemyType[] = [
   "slime",
   "zombie",
