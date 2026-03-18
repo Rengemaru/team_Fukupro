@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { usePlayerStore } from '../store/playerStore';
+import { useGameStore } from '../store/gameStore';
 
 type WeatherChoice = 'thunder' | 'fire' | 'water' | 'wind' | 'hail';
 type VillagerType = 'man' | 'woman' | 'beast_attack' | 'sailing_ship' | 'drought' | 'heavy_rain';
@@ -274,7 +275,11 @@ export class VillagerScene extends Phaser.Scene {
     resultText: Phaser.GameObjects.Text
   ) {
     const add = (go: Phaser.GameObjects.GameObject) => { container.add(go); return go; };
-    const types: WeatherChoice[] = ['thunder','fire','water','wind','hail'];
+    const ownedSpells = useGameStore.getState().playerSpells;
+    const allChoices: WeatherChoice[] = ['thunder','fire','water','wind','hail'];
+    const types: WeatherChoice[] = ownedSpells.length > 0
+      ? allChoices.filter(t => ownedSpells.includes(t))
+      : allChoices;
     const gap = 8, btnH = H - hudY - 30;
     const btnW = Math.floor((W - 20 - gap*(types.length-1)) / types.length);
     const by = hudY + 26;
@@ -456,7 +461,11 @@ export class VillagerScene extends Phaser.Scene {
     }).setOrigin(0.5).setVisible(false);
     add(resultBg); add(resultText);
 
-    const types: WeatherChoice[] = ['thunder','fire','water','wind','hail'];
+    const ownedSpells2 = useGameStore.getState().playerSpells;
+    const allChoices2: WeatherChoice[] = ['thunder','fire','water','wind','hail'];
+    const types: WeatherChoice[] = ownedSpells2.length > 0
+      ? allChoices2.filter(t => ownedSpells2.includes(t))
+      : allChoices2;
     const gap = 8, btnH = H - hudY - 30;
     const btnW = Math.floor((W - 20 - gap*(types.length-1)) / types.length);
     const by = hudY + 26;

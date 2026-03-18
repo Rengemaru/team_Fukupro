@@ -51,6 +51,8 @@ export class GameScene extends Phaser.Scene {
   private playerBaseY = 0;
   private enemyFrameTimer?: Phaser.Time.TimerEvent;
 
+  private newSpellFromBattle?: string;
+
   private playerHpText!: Phaser.GameObjects.Text;
   private skyGfx!: Phaser.GameObjects.Graphics;
   private idleSprite!: Phaser.GameObjects.Image;
@@ -291,7 +293,11 @@ export class GameScene extends Phaser.Scene {
     const pad    = 10;
     const statusW = 200;
 
-    const types: WeatherType[] = ['thunder', 'fire', 'water', 'wind', 'hail'];
+    const ownedSpells = useGameStore.getState().playerSpells;
+    const allTypes: WeatherType[] = ['thunder', 'fire', 'water', 'wind', 'hail'];
+    const types: WeatherType[] = ownedSpells.length > 0
+      ? allTypes.filter(t => ownedSpells.includes(t))
+      : allTypes;
     const gap  = 8;
     const btnW = Math.floor((W - statusW - pad * 2 - gap * (types.length - 1)) / types.length);
     const btnH = hudH - pad * 2;
@@ -376,6 +382,7 @@ export class GameScene extends Phaser.Scene {
           }
 
           if (res.battle_result === 'win') {
+            if (res.new_spell) this.newSpellFromBattle = res.new_spell;
             // onProjectileHit → onSlimeDefeated で処理される
             return;
           }
@@ -690,7 +697,7 @@ export class GameScene extends Phaser.Scene {
     this.tweens.add({ targets:this.slimeSprite, alpha:0, scaleY:0, y:this.slimeY+30, duration:500,
       onComplete: () => {
         this.battleLog.setText(`${enemyName}を倒した！`);
-        this.time.delayedCall(600, () => this.showMapReturnButton());
+        this.time.delayedCall(600, () => this.showNewSpellOrReturn());
       }
     });
     this.time.delayedCall(200, () => {
@@ -700,6 +707,47 @@ export class GameScene extends Phaser.Scene {
         this.tweens.add({ targets:p, x:p.x+Phaser.Math.Between(-90,90), y:p.y+Phaser.Math.Between(-110,20), alpha:0, duration:Phaser.Math.Between(600,1100), onComplete:()=>p.destroy() });
       }
     });
+  }
+
+  private showNewSpellOrReturn() {
+    const W = this.scale.width, H = this.scale.height;
+    const spell = this.newSpellFromBattle;
+
+    if (spell && spell in WEATHER_CONFIG) {
+      const cfg = WEATHER_CONFIG[spell as WeatherType];
+      useGameStore.getState().addPlayerSpell(spell);
+
+      // 背景パネル
+      const panel = this.add.graphics();
+      panel.fillStyle(0x0a0a2a, 0.88);
+      panel.fillRoundedRect(W/2 - 200, H*0.28, 400, 130, 14);
+      panel.lineStyle(2, 0xffdd44, 1);
+      panel.strokeRoundedRect(W/2 - 200, H*0.28, 400, 130, 14);
+
+      this.add.text(W/2, H*0.33, '✨ 新しい魔法を習得！', {
+        fontSize: '18px', fontFamily: '"Yu Gothic","YuGothic",monospace',
+        color: '#ffdd44', stroke: '#000', strokeThickness: 3,
+      }).setOrigin(0.5).setAlpha(0).setDepth(10)
+        .setData('panel', true);
+
+      const spellText = this.add.text(W/2, H*0.395, `${cfg.emoji}  ${cfg.label}`, {
+        fontSize: '32px', fontFamily: '"Yu Gothic","YuGothic",monospace',
+        color: '#ffffff', stroke: '#000', strokeThickness: 4,
+      }).setOrigin(0.5).setAlpha(0).setDepth(10);
+
+      // フェードイン
+      [panel, spellText, ...this.children.list.filter(o => (o as Phaser.GameObjects.Text).text === '✨ 新しい魔法を習得！')]
+        .forEach(o => this.tweens.add({ targets: o, alpha: 1, duration: 400 }));
+
+      this.time.delayedCall(1800, () => {
+        [panel, spellText].forEach(o =>
+          this.tweens.add({ targets: o, alpha: 0, duration: 300, onComplete: () => o.destroy() })
+        );
+        this.time.delayedCall(350, () => this.showMapReturnButton());
+      });
+    } else {
+      this.showMapReturnButton();
+    }
   }
 
   private showMapReturnButton() {
