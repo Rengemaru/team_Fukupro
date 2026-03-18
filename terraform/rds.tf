@@ -6,9 +6,10 @@ resource "aws_db_subnet_group" "main" {
 }
 
 resource "aws_db_instance" "main" {
-  engine         = "postgres"
-  engine_version = "15"
-  instance_class = "db.t3.micro"
+  engine             = "postgres"
+  engine_version     = "15"
+  instance_class     = "db.t3.micro"
+  allocated_storage  = 20
 
   db_name  = "app_production"
   username = var.db_username
