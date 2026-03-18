@@ -4,20 +4,25 @@ import { usePlayerStore } from '../store/playerStore';
 export class GameOverScene extends Phaser.Scene {
   constructor() { super({ key: 'GameOverScene' }); }
 
+  preload() {
+    this.load.image('game_over_bg', '/gameover.png');
+  }
+
   create() {
     const W = this.scale.width;
     const H = this.scale.height;
 
-    // 暗い背景
-    this.add.rectangle(W / 2, H / 2, W, H, 0x0a0a0f);
-
-    // 背景のノイズ粒子
-    for (let i = 0; i < 60; i++) {
-      const x = Phaser.Math.Between(0, W);
-      const y = Phaser.Math.Between(0, H);
-      const r = Phaser.Math.Between(1, 3);
-      this.add.circle(x, y, r, 0x222233, Phaser.Math.FloatBetween(0.1, 0.4));
+    // game_over.jpg を背景として表示
+    if (this.textures.exists('game_over_bg')) {
+      const bg = this.add.image(W / 2, H / 2, 'game_over_bg');
+      bg.setDisplaySize(W, H);
+    } else {
+      // 画像が読み込めなかった場合は暗い背景にフォールバック
+      this.add.rectangle(W / 2, H / 2, W, H, 0x0a0a0f);
     }
+
+    // 半透明オーバーレイ（テキストを見やすくする）
+    this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.45);
 
     // GAME OVER テキスト（赤・大）
     const title = this.add.text(W / 2, H * 0.32, 'GAME OVER', {
