@@ -22,6 +22,21 @@ export interface WeatherResponse {
   weather: string;
 }
 
+// ── Village ───────────────────────────────────────────────────────
+
+export interface VillageRequest {
+  session_token: string;
+  node_id: number;
+  weather: string;
+}
+
+export interface VillageResponse {
+  outcome: 'success' | 'penalty' | 'neutral';
+  hp_delta: number;
+  player_current_hp: number;
+  message: string;
+}
+
 // ── Battle ────────────────────────────────────────────────────────
 
 export interface BattleRequest {
