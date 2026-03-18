@@ -3,8 +3,12 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [develop]
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   changes:
@@ -111,3 +115,26 @@ jobs:
 
       - name: RuboCop
         run: bundle exec rubocop -f github
+
+  ci_success:
+    needs: [frontend_lint, frontend_build, backend_scan, backend_lint]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all jobs passed or skipped
+        run: |
+          results=(
+            "${{ needs.frontend_lint.result }}"
+            "${{ needs.frontend_build.result }}"
+            "${{ needs.backend_scan.result }}"
+            "${{ needs.backend_lint.result }}"
+          )
+          for result in "${results[@]}"; do
+            if [[ "$result" != "success" && "$result" != "skipped" ]]; then
+              echo "Job failed with result: $result"
+              exit 1
+            fi
+          done
+          echo "All jobs passed or skipped."
+
+# branch_test
