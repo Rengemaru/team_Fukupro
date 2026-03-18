@@ -1,17 +1,16 @@
-import { useState } from 'react'
 import { PhaserGame } from './components/PhaserGame'
 import HPHeart from './components/HPHeart'
 import MikeAccess from './components/MikeAccess'
 import WeatherIcon from './component/wether_icon'
 import type { WeatherType } from './component/wether_icon'
 import { useWeatherStore } from './store/weatherStore'
+import { usePlayerStore } from './store/playerStore'
 import './App.css'
 
 const VALID_WEATHER: WeatherType[] = ['sunny', 'rain', 'thunder', 'wind', 'hail']
 
 function App() {
-  const maxHP = 3
-  const [hp] = useState(maxHP)
+  const { hp, maxHP } = usePlayerStore()
   const { weather } = useWeatherStore()
 
   const currentWeather = VALID_WEATHER.includes(weather as WeatherType)
@@ -27,7 +26,7 @@ function App() {
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         {/* 左上: HP */}
         <div style={{ position: 'absolute', top: 16, left: 16, pointerEvents: 'auto' }}>
-          <HPHeart currentHP={hp} maxHP={maxHP} />
+          <HPHeart currentHP={hp} maxHP={maxHP} hearts={maxHP} />
         </div>
 
         {/* 右上: 天候アイコン */}
