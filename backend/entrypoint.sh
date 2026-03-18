@@ -26,7 +26,7 @@ CORS_EOF
 fi
 
 echo "==> Installing gems..."
-bundle install
+bundle install --local
 
 echo "==> Setting up database..."
 bundle exec rails db:prepare 2>/dev/null || bundle exec rails db:create db:migrate 2>/dev/null || true

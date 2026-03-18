@@ -6,7 +6,9 @@ module Api
                  :spectralCentroid, :spectralRolloff).to_h.symbolize_keys
       end
 
-      weather = WeatherClassifier.new(frames).classify
+      classifier = WeatherClassifier.new(frames)
+      weather = classifier.classify
+      Rails.logger.debug("WeatherClassifier avg: #{classifier.debug_avg}")
       render json: { weather: }
     end
   end
