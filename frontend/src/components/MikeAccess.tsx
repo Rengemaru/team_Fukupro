@@ -17,7 +17,6 @@ type FeatureFrame = {
 
 export default function MikeAccess() {
   const [micStatus, setMicStatus] = useState<MicStatus>('idle')
-  const [volume, setVolume] = useState(0)
   const [countdown, setCountdown] = useState(RECORDING_DURATION)
   const streamRef = useRef<MediaStream | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -40,7 +39,6 @@ export default function MikeAccess() {
       clearInterval(timerRef.current)
       timerRef.current = null
     }
-    setVolume(0)
   }
 
   const finishRecording = async () => {
@@ -88,7 +86,6 @@ export default function MikeAccess() {
             spectralCentroid: features.spectralCentroid ?? null,
             spectralRolloff: features.spectralRolloff ?? null,
           }
-          setVolume(Math.min(1, (features.rms ?? 0) * 4))
           frameBufferRef.current.push(frame)
         },
       })
