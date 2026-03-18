@@ -60,9 +60,9 @@ class BattleLogic
     if @enemy.immune_weathers.include?(@weather)
       [ 0, "immune" ]
     elsif @enemy.weakness_weathers.include?(@weather)
-      [ 2, "weakness" ]
+      [ 10, "weakness" ]
     else
-      [ 1, "hit" ]
+      [ 5, "hit" ]
     end
   end
 

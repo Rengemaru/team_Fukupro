@@ -33,7 +33,7 @@ export const ENEMY_CONFIG: Record<
   slime:         { name: "スライム",   hp: 30, color: 0x22dd22, imageKeys: null,                              displaySize: [0,   0  ] },
   zombie:        { name: "ゾンビ",     hp: 40, color: 0x55aa66, imageKeys: ["zonbi1",       "zonbi2"      ],  displaySize: [130, 265] },
   sand_golem:    { name: "砂の魔人",   hp: 50, color: 0xddbb55, imageKeys: ["sunanomazin1", "sunanomazin2"],  displaySize: [175, 210] },
-  fire_fairy:    { name: "炎の妖精",   hp: 25, color: 0xff6622, imageKeys: ["yousei1",      "yousei2"     ],  displaySize: [100, 100] },
+  fire_fairy:    { name: "炎の精霊",   hp: 35, color: 0xff6622, imageKeys: ["yousei1",      "yousei2"     ],  displaySize: [100, 100] },
   armored_ghost: { name: "鎧のお化け", hp: 45, color: 0x7788aa, imageKeys: ["yoroi1",       "yoroi2"      ],  displaySize: [145, 230] },
 };
 
