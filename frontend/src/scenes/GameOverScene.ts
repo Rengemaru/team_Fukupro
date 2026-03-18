@@ -21,40 +21,43 @@ export class GameOverScene extends Phaser.Scene {
       this.add.rectangle(W / 2, H / 2, W, H, 0x0a0a0f);
     }
 
-    // 半透明オーバーレイ（テキストを見やすくする）
-    this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.45);
+    // 半透明オーバーレイ（薄め）
+    this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.25);
 
-    // GAME OVER テキスト（赤・大）
-    const title = this.add.text(W / 2, H * 0.32, 'GAME OVER', {
-      fontSize: '72px',
-      fontFamily: 'monospace',
-      color: '#cc1111',
-      stroke: '#440000',
-      strokeThickness: 8,
+    // GAME OVER テキスト（ファンタジー風・金縁）
+    const title = this.add.text(W / 2, H * 0.28, 'GAME OVER', {
+      fontSize: '68px',
+      fontFamily: '"Georgia","Times New Roman",serif',
+      color: '#e8c97a',
+      stroke: '#3a1a00',
+      strokeThickness: 10,
+      shadow: { offsetX: 3, offsetY: 3, color: '#000000', blur: 8, fill: true },
     }).setOrigin(0.5).setAlpha(0);
 
     // サブテキスト
-    const sub = this.add.text(W / 2, H * 0.50, '力尽きてしまった…', {
-      fontSize: '24px',
-      fontFamily: '"Yu Gothic","YuGothic",monospace',
-      color: '#aaaaaa',
-      stroke: '#000',
-      strokeThickness: 2,
+    const sub = this.add.text(W / 2, H * 0.48, '力尽きてしまった…', {
+      fontSize: '22px',
+      fontFamily: '"Georgia","Times New Roman","Yu Mincho","YuMincho",serif',
+      color: '#d4b896',
+      stroke: '#1a0a00',
+      strokeThickness: 4,
+      shadow: { offsetX: 2, offsetY: 2, color: '#000000', blur: 6, fill: true },
     }).setOrigin(0.5).setAlpha(0);
 
     // タイトルへ戻るボタン
-    const btn = this.add.text(W / 2, H * 0.66, '[ タイトルへ戻る ]', {
-      fontSize: '26px',
-      fontFamily: 'monospace',
-      color: '#aaddff',
-      stroke: '#001144',
-      strokeThickness: 2,
-      backgroundColor: '#0d1a44',
-      padding: { x: 24, y: 12 },
+    const btn = this.add.text(W / 2, H * 0.66, '◆  タイトルへ戻る  ◆', {
+      fontSize: '24px',
+      fontFamily: '"Georgia","Times New Roman",serif',
+      color: '#e8c97a',
+      stroke: '#3a1a00',
+      strokeThickness: 4,
+      backgroundColor: '#1a0d00cc',
+      padding: { x: 28, y: 14 },
+      shadow: { offsetX: 2, offsetY: 2, color: '#000000', blur: 4, fill: true },
     }).setOrigin(0.5).setAlpha(0).setInteractive({ useHandCursor: true });
 
-    btn.on('pointerover', () => btn.setColor('#ffffff'));
-    btn.on('pointerout',  () => btn.setColor('#aaddff'));
+    btn.on('pointerover', () => btn.setStyle({ color: '#ffffff', backgroundColor: '#3a1f00cc' }));
+    btn.on('pointerout',  () => btn.setStyle({ color: '#e8c97a', backgroundColor: '#1a0d00cc' }));
     btn.on('pointerdown', () => {
       // HP をリセットしてタイトルへ
       usePlayerStore.getState().reset();
