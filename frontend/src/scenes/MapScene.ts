@@ -265,8 +265,12 @@ export class MapScene extends Phaser.Scene {
       store.reset();
       this.time.delayedCall(500, () => this.scene.start('ClearScene'));
     } else {
-      const villagerTypes = ['man', 'woman', 'beast_attack', 'sailing_ship', 'drought', 'heavy_rain'];
-      const villagerType = villagerTypes[node.id % villagerTypes.length];
+      const EVENT_TO_VILLAGER_TYPE: Record<string, string> = {
+        drought:  'drought',
+        flood:    'heavy_rain',
+        withered: 'beast_attack',
+      };
+      const villagerType = EVENT_TO_VILLAGER_TYPE[node.village_event ?? ''] ?? 'man';
       this.time.delayedCall(500, () => {
         this.scene.start('VillagerScene', { nodeId: node.id, villagerType });
       });
