@@ -10,7 +10,11 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
+<<<<<<< HEAD
 ActiveRecord::Schema[8.1].define(version: 2026_03_18_134729) do
+=======
+ActiveRecord::Schema[8.1].define(version: 2026_03_18_150706) do
+>>>>>>> 7656c9f (UI)
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -30,8 +34,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_18_134729) do
     t.datetime "expires_at", null: false
     t.boolean "finished", default: false, null: false
     t.jsonb "map_nodes", default: [], null: false
-    t.integer "player_hp", default: 3, null: false
-    t.integer "player_max_hp", default: 3, null: false
+    t.integer "player_hp", default: 5, null: false
+    t.integer "player_max_hp", default: 5, null: false
     t.integer "player_node_id", default: 0, null: false
     t.string "player_spells", default: [], array: true
     t.string "session_token", null: false
