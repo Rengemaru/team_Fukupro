@@ -17,7 +17,6 @@ type FeatureFrame = {
 
 export default function MikeAccess() {
   const [micStatus, setMicStatus] = useState<MicStatus>('idle')
-  const [volume, setVolume] = useState(0)
   const [countdown, setCountdown] = useState(RECORDING_DURATION)
   const streamRef = useRef<MediaStream | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -40,7 +39,6 @@ export default function MikeAccess() {
       clearInterval(timerRef.current)
       timerRef.current = null
     }
-    setVolume(0)
   }
 
   const finishRecording = async () => {
@@ -88,7 +86,6 @@ export default function MikeAccess() {
             spectralCentroid: features.spectralCentroid ?? null,
             spectralRolloff: features.spectralRolloff ?? null,
           }
-          setVolume(Math.min(1, (features.rms ?? 0) * 4))
           frameBufferRef.current.push(frame)
         },
       })
@@ -123,44 +120,33 @@ export default function MikeAccess() {
   }
 
   return (
-    <>
-      <h1>マイクアクセス</h1>
-      <div className="card">
-        {micStatus === 'idle' && (
-          <button onClick={requestMic}>録音開始（20秒）</button>
-        )}
-        {micStatus === 'recording' && (
-          <>
-            <p>録音中... あと {countdown} 秒</p>
-            <div style={{ width: 160, height: 10, background: '#333', borderRadius: 5, overflow: 'hidden', margin: '6px 0' }}>
-              <div style={{
-                height: '100%',
-                width: `${volume * 100}%`,
-                background: volume > 0.7 ? '#ff4444' : volume > 0.4 ? '#ffaa00' : '#44cc44',
-                borderRadius: 5,
-                transition: 'width 0.05s ease',
-              }} />
-            </div>
-          </>
-        )}
-        {micStatus === 'processing' && (
-          <p>天候を分析中...</p>
-        )}
-        {micStatus === 'denied' && (
-          <div className="error-box">
-            <p>マイクへのアクセスが拒否されました</p>
-            <p>ブラウザのアドレスバー横にある鍵アイコンをクリックし、マイクを「許可」に変更してからページを再読み込みしてください。</p>
-            <button onClick={() => setMicStatus('idle')}>再試行</button>
-          </div>
-        )}
-        {micStatus === 'error' && (
-          <div className="error-box">
-            <p>マイクへのアクセス中にエラーが発生しました。</p>
-            <p>マイクが接続されているか確認してください。</p>
-            <button onClick={() => setMicStatus('idle')}>再試行</button>
-          </div>
-        )}
-      </div>
-    </>
+    <div className="mic-ui">
+      {micStatus === 'idle' && (
+        <button className="mic-btn mic-btn--idle" onClick={requestMic} title="クリックして録音開始">
+          <img src="/mike.png" alt="マイク" className="mic-icon" />
+        </button>
+      )}
+      {micStatus === 'recording' && (
+        <button className="mic-btn mic-btn--active" onClick={finishRecording} title={`録音中 / あと ${countdown} 秒`}>
+          <img src="/stop.png" alt="停止" className="mic-icon" />
+          <span className="mic-countdown">{countdown}</span>
+        </button>
+      )}
+      {micStatus === 'processing' && (
+        <span className="mic-btn mic-btn--processing" title="天候を分析中...">
+          <img src="/clock.png" alt="分析中" className="mic-icon" />
+        </span>
+      )}
+      {micStatus === 'denied' && (
+        <button className="mic-btn mic-btn--error" onClick={() => setMicStatus('idle')} title="マイクが拒否されました。クリックして再試行">
+          <img src="/mike.png" alt="再試行" className="mic-icon mic-icon--denied" />
+        </button>
+      )}
+      {micStatus === 'error' && (
+        <button className="mic-btn mic-btn--error" onClick={() => setMicStatus('idle')} title="エラー。クリックして再試行">
+          <img src="/mike.png" alt="再試行" className="mic-icon mic-icon--denied" />
+        </button>
+      )}
+    </div>
   )
 }
