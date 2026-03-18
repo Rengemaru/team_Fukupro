@@ -1,0 +1,7 @@
+project          = "weather-roguelite"
+aws_account_id   = "123456789012"
+github_org       = "<GitHubユーザー名またはOrg名>"
+github_repo      = "<リポジトリ名>"
+db_username      = "postgres"
+db_password      = ""   # 実際の値を terraform.tfvars に記入
+rails_master_key = ""   # backend/config/master.key の内容を記入

@@ -29,11 +29,11 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ steps.login-ecr.outputs.registry }}/weather-roguelite-api:${{ github.sha }} .
+          docker build -t ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} .
 
       - name: Push Docker image to ECR
         run: |
-          docker push ${{ steps.login-ecr.outputs.registry }}/weather-roguelite-api:${{ github.sha }}
+          docker push ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
 
       - name: Register new task definition
         id: register-task-def
@@ -44,7 +44,7 @@ jobs:
             --output json)
 
           NEW_TASK_DEF=$(echo $TASK_DEF | jq \
-            --arg IMAGE "${{ steps.login-ecr.outputs.registry }}/weather-roguelite-api:${{ github.sha }}" \
+            --arg IMAGE "${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}" \
             '.containerDefinitions[0].image = $IMAGE
             | del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .placementConstraints, .compatibilities, .registeredAt, .registeredBy)')
 

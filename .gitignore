@@ -19,3 +19,9 @@ backend/config/credentials/*.key
 # OS
 .DS_Store
 Thumbs.db
+
+# Terraform
+terraform/.terraform/
+terraform/terraform.tfvars
+terraform/*.tfstate
+terraform/*.tfstate.backup
