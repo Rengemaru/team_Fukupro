@@ -643,6 +643,8 @@ export class VillagerScene extends Phaser.Scene {
     btn.on('pointerover', () => btn.setColor('#88bbff'));
     btn.on('pointerout',  () => btn.setColor('#4488ff'));
     btn.on('pointerdown', () => {
+      localStorage.removeItem('session_token');
+      usePlayerStore.getState().reset();
       this.cameras.main.fade(500, 0, 0, 0);
       this.time.delayedCall(500, () => this.scene.start('TitleScene'));
     });

@@ -8,9 +8,14 @@ export interface SessionResponse {
   player_node_id: number;
   completed_nodes: number[];
   finished: boolean;
+<<<<<<< HEAD
   player_spells: string[];
   player_hp: number;
   player_max_hp: number;
+=======
+  player_hp: number;
+  player_spells: string[];
+>>>>>>> 1fba73e (UI)
 }
 
 export interface UpdateSessionRequest {

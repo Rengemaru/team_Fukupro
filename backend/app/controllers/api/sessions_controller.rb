@@ -67,6 +67,10 @@ module Api
         player_node_id:  session.player_node_id,
         completed_nodes: session.completed_nodes,
         finished:        session.finished,
+<<<<<<< HEAD
+=======
+        player_hp:       session.player_hp,
+>>>>>>> 1fba73e (UI)
         player_spells:   session.player_spells || []
       }
     end

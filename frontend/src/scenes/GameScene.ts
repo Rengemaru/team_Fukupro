@@ -855,6 +855,8 @@ export class GameScene extends Phaser.Scene {
     back.on('pointerover', () => back.setColor('#88bbff'));
     back.on('pointerout',  () => back.setColor('#4488ff'));
     back.on('pointerdown', () => {
+      localStorage.removeItem('session_token');
+      usePlayerStore.getState().reset();
       this.cameras.main.fade(500, 0, 0, 0);
       this.time.delayedCall(500, () => this.scene.start('TitleScene'));
     });

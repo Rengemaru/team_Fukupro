@@ -63,7 +63,11 @@ export class MapScene extends Phaser.Scene {
     store.setPlayerNodeId(data.player_node_id);
     store.setCompletedNodes(data.completed_nodes);
     if (data.player_spells) store.setPlayerSpells(data.player_spells);
+<<<<<<< HEAD
     if (data.player_hp != null) usePlayerStore.getState().setHp(data.player_hp);
+=======
+    if (typeof data.player_hp === 'number') usePlayerStore.getState().setHp(data.player_hp);
+>>>>>>> 1fba73e (UI)
   }
 
   // ─── 実描画 ───────────────────────────────────────────────
@@ -334,6 +338,7 @@ export class MapScene extends Phaser.Scene {
     btn.on('pointerover', () => btn.setColor('#88bbff'));
     btn.on('pointerout',  () => btn.setColor('#4488ff'));
     btn.on('pointerdown', () => {
+      localStorage.removeItem('session_token');
       this.cameras.main.fade(500, 0, 0, 0);
       this.time.delayedCall(500, () => this.scene.start('TitleScene'));
     });
