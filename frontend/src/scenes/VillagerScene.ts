@@ -121,6 +121,7 @@ export class VillagerScene extends Phaser.Scene {
   constructor() { super({ key: 'VillagerScene' }); }
 
   preload() {
+    if (!this.textures.exists('bg_mura'))         this.load.image('bg_mura',         'mura.jpg');
     if (!this.textures.exists('man_murabito'))    this.load.image('man_murabito',    'man_murabito.jpg');
     if (!this.textures.exists('woman_murabito'))  this.load.image('woman_murabito',  'woman_murabito.jpg');
     if (!this.textures.exists('village_attack'))  this.load.image('village_attack',  'village-underattack.jpg');
@@ -209,13 +210,25 @@ export class VillagerScene extends Phaser.Scene {
 
     this.addBackButton(W);
 
+    // 村人（冒険者の対面）
+    const specialGroundY = H * 0.72;
+    const specialVillagerY = specialGroundY + 20;
+    this.removeBlackBg('woman_murabito');
+    const hasWoman = this.textures.exists('woman_murabito') && this.textures.get('woman_murabito').key !== '__MISSING';
+    if (hasWoman) {
+      this.add.image(W * 0.68, specialVillagerY, 'woman_murabito')
+        .setOrigin(0.5, 1).setScale(0.45).setFlipX(true);
+    } else {
+      this.makeFallbackVillager(W * 0.68, specialVillagerY, 'woman');
+    }
+
     // depth:10 でヒーローより前面に描画
     const uiContainer = this.add.container(0, 0).setVisible(false).setDepth(10);
     this.buildSpecialEventUI(W, H, nodeId, uiContainer, cfg);
 
     this.cameras.main.fadeIn(500);
     this.time.delayedCall(300, () => {
-      this.animateHeroEntry(W, H * 0.72, () => uiContainer.setVisible(true));
+      this.animateHeroEntry(W, specialGroundY, () => uiContainer.setVisible(true));
     });
   }
 
@@ -232,15 +245,15 @@ export class VillagerScene extends Phaser.Scene {
       color:'#ff9944', stroke:'#1a0800', strokeThickness:4,
     }).setOrigin(0.5));
 
-    // 吹き出し（左寄せ、ヒーローの右）
-    const bx = W * 0.28, bw = W * 0.68, bTop = 44, bH = 100;
+    // 吹き出し（村人の上）
+    const bw = W * 0.52, bx = W * 0.68 - bw / 2, bTop = H * 0.72 - 300, bH = 100;
     const bubbleBg = this.add.graphics();
     bubbleBg.fillStyle(0x050505, 0.90);
     bubbleBg.fillRoundedRect(bx, bTop, bw, bH, 12);
     bubbleBg.lineStyle(2, 0x884422, 0.90);
     bubbleBg.strokeRoundedRect(bx, bTop, bw, bH, 12);
     bubbleBg.fillStyle(0x050505, 0.90);
-    bubbleBg.fillTriangle(bx, bTop+34, bx-16, bTop+44, bx, bTop+54);
+    bubbleBg.fillTriangle(bx + bw / 2 - 12, bTop + bH, bx + bw / 2 + 12, bTop + bH, bx + bw / 2, bTop + bH + 20);
     add(bubbleBg);
     add(this.add.text(bx+12, bTop+8, cfg.speechStr, {
       fontSize:'13px', fontFamily:'"Yu Gothic","YuGothic",monospace',
@@ -415,8 +428,8 @@ export class VillagerScene extends Phaser.Scene {
     const villagerX = W * 0.68;
     const hasVillager = this.textures.exists(villagerKey) && this.textures.get(villagerKey).key !== '__MISSING';
     if (hasVillager) {
-      this.add.image(villagerX, groundY, villagerKey)
-        .setOrigin(0.5, 1).setScale(0.60).setFlipX(true);
+      this.add.image(villagerX, groundY + 20, villagerKey)
+        .setOrigin(0.5, 1).setScale(0.45).setFlipX(true);
     } else {
       this.makeFallbackVillager(villagerX, groundY, villagerType);
     }
@@ -445,14 +458,14 @@ export class VillagerScene extends Phaser.Scene {
       color:'#ffcc66', stroke:'#1a0800', strokeThickness:4,
     }).setOrigin(0.5));
 
-    const bx = W * 0.28, bw = W * 0.68, bTop = 44, bH = 108;
+    const bw = W * 0.52, bx = W * 0.68 - bw / 2, bTop = H * 0.72 - 300, bH = 108;
     const bubbleBg = this.add.graphics();
     bubbleBg.fillStyle(0x0a1a0a, 0.90);
     bubbleBg.fillRoundedRect(bx, bTop, bw, bH, 12);
     bubbleBg.lineStyle(2, 0x3a7a44, 0.85);
     bubbleBg.strokeRoundedRect(bx, bTop, bw, bH, 12);
     bubbleBg.fillStyle(0x0a1a0a, 0.90);
-    bubbleBg.fillTriangle(bx, bTop+34, bx-16, bTop+44, bx, bTop+54);
+    bubbleBg.fillTriangle(bx + bw / 2 - 12, bTop + bH, bx + bw / 2 + 12, bTop + bH, bx + bw / 2, bTop + bH + 20);
     add(bubbleBg);
     const speechStr = villagerType === 'man'
       ? '「た、助けてください！\n　魔物に追われています…\n　あなたの天候の力で\n　何とかしてください！」'
@@ -579,9 +592,10 @@ export class VillagerScene extends Phaser.Scene {
     );
     if (validKeys.length === 0) { onArrive(); return; }
 
-    const hero = this.add.image(-90, groundY, validKeys[0]).setOrigin(0.5, 1).setScale(1.2).setDepth(5);
+    const heroY = groundY + 20;
+    const hero = this.add.image(-90, heroY, validKeys[0]).setOrigin(0.5, 1).setScale(1.2).setDepth(5);
     const fixedW = hero.displayWidth, fixedH = hero.displayHeight;
-    const shadow = this.add.ellipse(-90, groundY + 4, 50, 12, 0x000000, 0.32).setDepth(4);
+    const shadow = this.add.ellipse(-90, groundY + 6, 50, 12, 0x000000, 0.32).setDepth(4);
 
     let fi = 0;
     const walkTimer = this.time.addEvent({
