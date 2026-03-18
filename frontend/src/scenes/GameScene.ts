@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { usePlayerStore } from '../store/playerStore';
 
 const SPRITE_SCALE     = 1.7;   // ← キャラクター（立ち・攻撃）の倍率（手前→大きめ）
 const ATK_SPRITE_SCALE = 2.0;   // ← 攻撃エフェクト画像の倍率
@@ -343,6 +344,39 @@ export class GameScene extends Phaser.Scene {
 
     // ③ 1.1秒後にアイドルに戻す
     this.time.delayedCall(1100, () => this.showSprite('idle'));
+
+    // ④ 1.3秒後にスライムが反撃
+    this.time.delayedCall(1300, () => {
+      if (this.slimeHp > 0) this.slimeCounterAttack();
+    });
+  }
+
+  // ─── スライム反撃処理 ──────────────────────────────────────
+  private slimeCounterAttack() {
+    // スライムが左に突進するアニメ
+    this.tweens.add({
+      targets: this.slimeSprite,
+      x: this.slimeX - 80,
+      duration: 180,
+      yoyo: true,
+      ease: 'Quad.easeOut',
+    });
+
+    this.battleLog.setText('スライムの攻撃！ダメージを受けた！');
+
+    // プレイヤーへのヒットエフェクト
+    const hit = this.add.circle(this.playerX + 30, this.playerBaseY - 60, 22, 0x22dd22, 0.8);
+    this.tweens.add({
+      targets: hit,
+      scaleX: 2.5,
+      scaleY: 2.5,
+      alpha: 0,
+      duration: 350,
+      onComplete: () => hit.destroy(),
+    });
+
+    // Zustand の dealDamage でハートを1つ減らす
+    usePlayerStore.getState().dealDamage();
   }
 
   // ─── スプライト切り替え ─────────────────────────────────────
