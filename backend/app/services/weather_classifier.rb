@@ -1,9 +1,9 @@
 class WeatherClassifier
   # 表示dB = 20*log10(rms) + 60 の逆算
-  RMS_WIND      = 10 ** (( 10 - 60) / 20.0)  #  10dB → ~0.00316
-  RMS_SUNNY     = 10 ** (( 20 - 60) / 20.0)  #  20dB → 0.01
-  RMS_RAIN      = 10 ** (( 30 - 60) / 20.0)  #  30dB → ~0.0316
-  RMS_THUNDER   = 10 ** (( 40 - 60) / 20.0)  #  40dB → 0.1
+  RMS_WIND      = 10 ** ((10 - 60) / 20.0)   #  10dB → ~0.00316
+  RMS_SUNNY     = 10 ** ((20 - 60) / 20.0)   #  20dB → 0.01
+  RMS_RAIN      = 10 ** ((30 - 60) / 20.0)   #  30dB → ~0.0316
+  RMS_THUNDER   = 10 ** ((40 - 60) / 20.0)   #  40dB → 0.1
   # 41dB以上 → 雹
 
   def initialize(frames)
@@ -32,7 +32,7 @@ class WeatherClassifier
   end
 
   def debug_avg
-    { avg_rms: average_rms, display_db: (20 * Math.log10([average_rms, 1e-10].max) + 60).round(1) }
+    { avg_rms: average_rms, display_db: (20 * Math.log10([ average_rms, 1e-10 ].max) + 60).round(1) }
   end
 
   private
