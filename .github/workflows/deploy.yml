@@ -79,11 +79,23 @@ jobs:
 
           # aws ecs wait tasks-stopped はコンテナが非0終了してもエラーを返さないため、
           # 終了コードを明示的に取得してチェックする。
-          EXIT_CODE=$(aws ecs describe-tasks \
+          TASK_INFO=$(aws ecs describe-tasks \
             --cluster weather-roguelite-cluster \
             --tasks $TASK_ARN \
-            --query 'tasks[0].containers[0].exitCode' \
-            --output text)
+            --output json)
+
+          EXIT_CODE=$(echo "$TASK_INFO" | jq -r '.tasks[0].containers[0].exitCode // "None"')
+          STOPPED_REASON=$(echo "$TASK_INFO" | jq -r '.tasks[0].stoppedReason // "N/A"')
+          CONTAINER_REASON=$(echo "$TASK_INFO" | jq -r '.tasks[0].containers[0].reason // "N/A"')
+
+          echo "Exit code       : $EXIT_CODE"
+          echo "Stopped reason  : $STOPPED_REASON"
+          echo "Container reason: $CONTAINER_REASON"
+
+          if [ "$EXIT_CODE" = "None" ]; then
+            echo "Migration task did not start successfully (exitCode is None)"
+            exit 1
+          fi
 
           if [ "$EXIT_CODE" != "0" ]; then
             echo "Migration failed with exit code $EXIT_CODE"
